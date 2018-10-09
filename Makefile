@@ -3,4 +3,4 @@ CC = gcc
 OBJ_NAME = main
 
 all: $(OBJS)
-	$(CC) $(OBJS)  -o $(OBJ_NAME)
+	$(CC) $(OBJS)  -o $(OBJ_NAME) 

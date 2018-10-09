@@ -2,7 +2,7 @@
 #define CLIENT_H_ 
 
 #ifndef MAX_STRING_NAME
-#define MAX_STRING_NAME 100UL
+#define MAX_STRING_NAME 124UL
 #endif
 
 typedef struct Client 
@@ -12,7 +12,7 @@ typedef struct Client
 }*Client;
 
 
-
+void GetClientStackAlloc(Client client);
 
 
 
