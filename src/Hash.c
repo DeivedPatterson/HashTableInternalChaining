@@ -53,12 +53,6 @@ Hash newHashCreate(int size, HashFunction function, TypeObj type)
 					thash->function = function;
 					thash->type = type;
 					FileOpen(thash->table, "HashTable/HashTable.bin", "w+b");
-
-					// int temp = None;
-					// for(i = 0; i < size; i++)
-					// {
-					// 	FileWrite(&temp, Type(struct Container), 1, thash->table, res);
-					// }
 				}
 				else
 				{
@@ -104,9 +98,10 @@ void PrintHashTable(Hash thash, void(*format)(Object))
 	while(!isEnd)
 	{
 		FileRead(&container, sizeof(struct Container), 1, CHash(thash)->table, res);
-		if(res > 0)
-		{
-			format(container.data);
+		if(res > 0) 
+		{	
+			//if(container.des.bit.field.notfree)
+				format(container.data);
 		}
 		else
 		{
@@ -117,26 +112,6 @@ void PrintHashTable(Hash thash, void(*format)(Object))
 
 Object getRegisterHashTable(Hash thash, int key)
 {
-
-	// int index;
-	// int pos = None;
-	// int i; 
-	// struct Register _register;
-	// Object attached;
-
-	// if(HashIsEmpty(thash))
-	// 	return NULL;
-
-	// attached = malloc(CHash(thash)->type);
-
-	// index = CHash(thash)->function(key, CHash(thash)->limit);
-
-	// FileSeek(CHash(thash)->table, index*sizeof(uint32_t), SEEK_SET);
-
-	// for(i = 0; i < CHash(thash)->limit; i++)
-	// {
-	// 	//FileRead(attached, CHash(thash)->type, 1, CHash(thash)->table, res);	
-	// }
 
 }
 
@@ -149,7 +124,7 @@ static Object newContainer(unsigned long long size)
 		container = malloc(sizeof(struct Container));
 		if(container != NULL)
 		{
-			
+			container->des.bit.t = 0;
 		}
 		else
 		{
@@ -171,6 +146,7 @@ void addObjectHashTable(Hash thash, Object obj)
 	int pos = None;
 	int res = -1;
 	bool freeFound = false;
+	bool limitTable = false;
 	struct Container container;
 	Descriptor des;
 	int i;
@@ -182,32 +158,52 @@ void addObjectHashTable(Hash thash, Object obj)
 
 	index = CHash(thash)->function(key, CHash(thash)->limit);
 
+	ReWind(CHash(thash)->table);
+
 	FileSeek(CHash(thash)->table, index*sizeof(struct Container), SEEK_SET);
 
 	FileRead(&container, Type(struct Container), 1, CHash(thash)->table, res);
 
-	if(container.des.bit.field.free == false)
+	if(container.des.bit.field.notfree == false)
 	{
-
+		printf("Inserção Index Vazio !!! \nCode Line: %i\nIndex: %i\n", __LINE__, index);
+		container.des.bit.field.notfree = true;
 		FileSeek(CHash(thash)->table, index*sizeof(struct Container), SEEK_SET);
 		FileWrite(&container, Type(struct Container), 1, CHash(thash)->table, res);
+		CHash(thash)->size += 1;
 	}
 	else
 	{
 		i = 1;
-
-		while(!freeFound)
+		printf("Houve Colisão!!! \nCode Line: %i\nIndex: %i\n", __LINE__, index);
+		while(!freeFound && !limitTable)
 		{
-
+			puts("***");
 			FileSeek(CHash(thash)->table, (i+index)*sizeof(struct Container), SEEK_SET);
 			FileRead(&container, Type(struct Container), 1, CHash(thash)->table, res);
+			printf("container.des.bit.field.notfree: %s\n", container.des.bit.field.notfree?"true":"false");
+			printf("res %i\n", res);
 
-			if(container.des.bit.field.free == true)
+
+			if(CHash(thash)->size >= CHash(thash)->limit)
 			{
-				i++;
+				puts("Tabela cheia");
+				limitTable = true;
 			}
-
-		}		
+			else if(container.des.bit.field.notfree == false)
+			{
+				printf("Linha: %i, Index: %i\n", __LINE__, index + i);
+				container.des.bit.field.next = index+i;
+				container.des.bit.field.notfree = true;
+				FileWrite(&container, Type(struct Container), 1, CHash(thash)->table, res);
+				CHash(thash)->size += 1;
+				freeFound = true;
+			}
+			else
+			{
+				i += 1;
+				puts("www");
+			}
+		}
 	}
-
 }

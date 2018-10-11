@@ -15,7 +15,7 @@ typedef struct
 		struct
 		{
 			int next:31;
-			unsigned free:1;
+			unsigned notfree:1;
 		}field;
 	}bit;
 }Descriptor;

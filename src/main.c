@@ -15,53 +15,41 @@ static inline __attribute__((always_inline)) int ModFunction(int key, int size)
 }
 
 
-static void AddClient()
+static void AddClient(Hash thash)
 {
+	struct Client client;
 
+	puts("Entre com o Nome");
+	GetClientStackAlloc(&client);
+	addObjectHashTable(thash, &client);
 }
 
-static void RemoveClient()
+static void RemoveClient(Hash thash)
 {
 
 }
        
-static void SearchClient()
+static void SearchClient(Hash thash)
 {
 }
 
 static void Format(Object Obj)
 {
 	struct Client client;
-
+	bool isNull;
 
 	memcpy(&client, Obj, Type(struct Client));
 
-	printf("Nome: %s\n" , strlen(client.name) == 0?"null":client.name);
-	printf("Código: %i\n",client.codeClient);
+	isNull = strlen(client.name) == 0?true:false;
+
+	printf("Nome: %s\n" , isNull?"null":client.name);
+	printf("Código: %i\n",isNull?-1:client.codeClient);
 
 }
 
-static void PrintFile(FILE* file)
+static void PrintTable(Hash thash)
 {
-	struct Client client;
-	int res = -1;
-	bool isEnd = false;
-
-	ReWind(file);
-
-	while(!isEnd)
-	{
-		FileRead(&client, sizeof(struct Client), 1, file, res);
-		if(res > 0)
-		{
-			printf("Nome: %s\n" , !strlen(client.name)?"null":client.name);
-			printf("Código: %i\n",client.codeClient);
-		}
-		else
-		{
-			isEnd = true;
-		}
-	}
+	PrintHashTable(thash, Format);
 }
 
 int main(int argc, char const *argv[])
@@ -69,23 +57,44 @@ int main(int argc, char const *argv[])
 	Hash thash;
 	struct Client client; 
 	int n;
-	static void(*option[]) = {AddClient, RemoveClient, SearchClient};
-	
-	scanf("%i",&n);
+	int op;
+	bool endApp = false;
+
+	static void(*option[])(Hash) = {AddClient, PrintTable, RemoveClient, SearchClient};
 
 	srand(time(NULL));
 
+	puts("Entre com o tamanho da tabela");
+	scanf("%i",&n);
 	thash = newHashCreate(n, ModFunction, Type(struct Client));
 
+	while(!endApp)
+	{
+		puts("****************************");
+		puts("* 0: Adcionar Novo Cliente *");
+		puts("* 1: Imprimir Tabela       *");
+		puts("* 2: Excluir Cliente       *");
+		puts("* 3: Exit                  *");
+		puts("****************************");
 
-	GetClientStackAlloc(&client);
+		scanf("%i", &op);
 
-	addObjectHashTable(thash, &client);
-
-	PrintHashTable(thash, Format);
-
-
+		if(op < sizeof(option)/8)
+		{
+			if(op == 3)
+			{
+				endApp = true;
+			}
+			else
+			{
+				option[op](thash);
+			}
+		}
+		else
+		{
+			endApp = true;
+		}
+	}
 
 	return 0;
-
 }
